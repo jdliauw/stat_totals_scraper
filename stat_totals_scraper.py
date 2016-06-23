@@ -89,10 +89,6 @@ def eww_gui():
                 print 'hold:', hold
                 print years
 
-
-
-
-
     else:
         years = selection.split('-')
 
