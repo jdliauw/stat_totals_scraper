@@ -78,7 +78,7 @@ def eww_gui():
                 hold = years[i].split('-')
 
                 for j in range(int(hold[1])  + 1 - int(hold[0])):
-                    hold.append(int(hold[0]) + j)
+                    hold.append(str(int(hold[0]) + j))
 
                 hold.remove(hold[0])
                 hold.remove(hold[0])                
@@ -97,7 +97,7 @@ def eww_gui():
         years = selection.split('-')
 
         for i in range(int(years[1]) + 1 - int(years[0])):
-            years.append(int(years[0]) + i)
+            years.append(str(int(years[0]) + i))
 
         years.remove(years[0])
         years.remove(years[0])
