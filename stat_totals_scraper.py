@@ -57,23 +57,38 @@ def eww_gui():
     years = []
     indices = []
     hold = []
-    print '\nThanks for using this stat table scraper script, you must care way too much about basketball and/or have a sick fascination with numbers. That makes two of us, maybe.'
-    print '\nThis script pulls the totals stat table from basketball-reference.com for a given year or years and stores it as a csv in your current directory in the format: \"YEAR_stats.txt\"\n'
+    print '\nThis script pulls the totals stat table from basketball-reference.com for a given year or years and stores it as a csv in your current directory in the format: \"YEAR_stats.csv\"\n'
     print '   + If you want to pull a single year, just type the year followed by \'enter\'\n   + If you want to pull from multiple years, separate each year by a space, then \'enter\'.'
     print '   + If you want to pull from a range of years, separate by the years by a \'-\' (ex: 1996-1997), then \'enter\'\n'
 
     selection = raw_input("   Year(s) selection: ")
 
+    # input cases:
+    '''
+        1. single year
+        2. multiple years separated by space
+        3. multiple year and single range
+        4. single year and multiple range
+        5. multiple year and multiple range
+    '''
+
     if ' ' not in selection and '-' not in selection:
-        # crawl_it(selection)
-        # log_it(selection)
-        print '\n   **** Success:', selection, 'stat table stored as: \"' + selection + '_stats.txt\" ****\n'
+
+        try:
+            crawl_it(selection)
+            log_it(selection)
+            print '\n   **** Success:', selection, 'stat table stored as: \"' + selection + '_stats.txt\" ****\n'
+        except:
+            print '\n   **** Failed: invalid year input ****\n'
 
     elif ' ' in selection:
         years = selection.split(' ')
-        print years
 
-        for i in range(0, len(years)):
+        flag = True
+        i = 0
+
+        while flag:
+
             if '-' in years[i]:
                 hold = years[i].split('-')
 
@@ -84,10 +99,15 @@ def eww_gui():
                 hold.remove(hold[0])                
 
                 for k in range(0, len(hold)):
-                    years.append(hold[k])
+                    if(hold[k] not in years):
+                        years.append(hold[k])
                 years.remove(years[i])
-                print 'hold:', hold
-                print years
+                i = i - 1
+
+            i = i + 1
+
+            if i == len(years):
+                flag = False
 
     else:
         years = selection.split('-')
@@ -101,12 +121,14 @@ def eww_gui():
         for i in range(0, len(years)):
             crawl_it(years[i])
             log_it(years[i])
+
+    print years
     
 
 # ---------------- main ----------------
 
-# eww_gui()
+eww_gui()
 
-for year in range(2000, 2010):
-    crawl_it(year)
-    log_it(year)
+# for year in range(2000, 2010):
+#     crawl_it(year)
+#     log_it(year)
