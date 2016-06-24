@@ -1,6 +1,8 @@
 import urllib
 import requests
 import HTMLParser
+import os
+import shutil
 from bs4 import BeautifulSoup
 
 def crawl_it(year):
@@ -43,7 +45,6 @@ def log_it(year):
             all_stats.append(player_stats)
         player_stats = []
         
-
     for i in range(0, len(all_stats)):
         for j in range(0, len(all_stats[i])):
             output.write(str(all_stats[i][j]))
@@ -110,14 +111,22 @@ def eww_gui():
            
     years.sort()
     
+    if not os.path.exists('csv_files'):
+        os.makedirs('csv_files')
+    
+    source = os.path.dirname(os.path.abspath(__file__))
+    destination = source + "/csv_files"
+            
     try:
         for i in range(0, len(years)):
             crawl_it(years[i])
             log_it(years[i])
+            file_name = str(years[i]) + '_NBA_TOTALS.csv'
+            shutil.move(file_name,destination)
             print '   + Successfully stored ' + str(years[i]) + '_NBA_TOTALS.csv'
     except:
-        print '   - Failed to store ' + str(years[i]) + '_NBA_TOTALS.csv' + ': invalid year input'
-    
+        print '   - Failed to store ' + str(years[i]) + '_NBA_TOTALS.csv'
+
     print ''
 
 # ---------------- main ----------------
