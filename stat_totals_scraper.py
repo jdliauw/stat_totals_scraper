@@ -16,10 +16,11 @@ def crawl_it(year):
 
 def log_it(year):
     html = open("soup.html")
-    output = open(str(year) + '_stats.csv', "w+")
+    output = open(str(year) + '_NBA_TOTALS.csv', "w+")
 
     player_stats, all_stats = [], []
-    all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', 'EFG%', 'FTM', 'FTA', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
+    all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
+    '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
 
     bsoup = BeautifulSoup(html, 'html.parser')
     stats_table = bsoup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
@@ -53,14 +54,18 @@ def log_it(year):
     output.close()
 
 def eww_gui():
-    
     years = []
     indices = []
     hold = []
-    print '\nThis script pulls the totals stat table from basketball-reference.com for a given year or years and stores it as a csv in your current directory in the format: \"YEAR_stats.csv\"\n'
-    print '   + If you want to pull a single year, just type the year followed by \'enter\'\n   + If you want to pull from multiple years, separate each year by a space, then \'enter\'.'
-    print '   + If you want to pull from a range of years, separate by the years by a \'-\' (ex: 1996-1997), then \'enter\'\n'
+    print '\n   This script pulls the totals stat table from basketball-reference.com'
+    print '   for a given year/s and stores it to your current directory in the format:'
+    print '   \"YEAR_NBA_TOTALS.csv\"\n'
+    print '   If you want to pull:'
+    print '   * a single year, just type the year'
+    print '   * from multiple years, separate each year by a space'
+    print '   * from a range of years, separate by the years by a \'-\' (ex: 1996-1997)'
 
+    print ''
     selection = raw_input("   Year(s) selection: ")
 
     if ' ' not in selection and '-' not in selection:
@@ -104,24 +109,17 @@ def eww_gui():
         years.remove(years[0])
            
     years.sort()
-
-    print years
-
-    # actually attempt to crawl and log
-
-    # try:
-    #     for i in range(0, len(years)):
-    #         crawl_it(years[i])
-    #         log_it(years[i])
-    #         print '\n   **** Success:', selection, 'stat table stored as: \"' + selection + '_stats.txt\" ****\n'
-    # except:
-    #     print '\n   **** Failed: invalid year input ****\n'
-    #     print ''
+    
+    try:
+        for i in range(0, len(years)):
+            crawl_it(years[i])
+            log_it(years[i])
+            print '   + Successfully stored ' + str(years[i]) + '_NBA_TOTALS.csv'
+    except:
+        print '   - Failed to store ' + str(years[i]) + '_NBA_TOTALS.csv' + ': invalid year input'
+    
+    print ''
 
 # ---------------- main ----------------
 
 eww_gui()
-
-# for year in range(2000, 2010):
-#     crawl_it(year)
-#     log_it(year)
