@@ -56,7 +56,6 @@ def log_it(year):
 
 def eww_gui():
     years = []
-    indices = []
     hold = []
     print '\n   This script pulls the totals stat table from basketball-reference.com'
     print '   for a given year/s and stores it to your current directory in the format:'
