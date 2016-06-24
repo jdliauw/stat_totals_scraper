@@ -1,8 +1,4 @@
 # stat_totals_scraper
-This script web scrapes and stores the player statistics table from basketball-reference.com based on the user-input year/s as a csv. 
+This script web scrapes the player statistics table for a given year/years/range of years from basketball-reference.com and stores each year as a csv in a new directory. This should be run from the terminal/command-line.
 
-This should be run from the terminal/command-line. A single year, multiple years, or a range of years are valid inputs. csvs are stored in a directory.
-
-As this is my first personal Git project, this is more of a Git, VIM, and Python web-scraping exercise than a practical or useful tool, as the ycsv is already provided directly from basketball-reference.com.
-
-
+As this is my first Git project, this is more of a Git, VIM, and Python web-scraping exercise than a practical or useful tool, as the csv is already provided directly from basketball-reference.com for free.
