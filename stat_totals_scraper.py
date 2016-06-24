@@ -63,23 +63,8 @@ def eww_gui():
 
     selection = raw_input("   Year(s) selection: ")
 
-    # input cases:
-    '''
-        1. single year
-        2. multiple years separated by space
-        3. multiple year and single range
-        4. single year and multiple range
-        5. multiple year and multiple range
-    '''
-
     if ' ' not in selection and '-' not in selection:
-
-        try:
-            crawl_it(selection)
-            log_it(selection)
-            print '\n   **** Success:', selection, 'stat table stored as: \"' + selection + '_stats.txt\" ****\n'
-        except:
-            print '\n   **** Failed: invalid year input ****\n'
+        years.append(selection)
 
     elif ' ' in selection:
         years = selection.split(' ')
@@ -117,13 +102,21 @@ def eww_gui():
 
         years.remove(years[0])
         years.remove(years[0])
-        
-        for i in range(0, len(years)):
-            crawl_it(years[i])
-            log_it(years[i])
+           
+    years.sort()
 
     print years
-    
+
+    # actually attempt to crawl and log
+
+    # try:
+    #     for i in range(0, len(years)):
+    #         crawl_it(years[i])
+    #         log_it(years[i])
+    #         print '\n   **** Success:', selection, 'stat table stored as: \"' + selection + '_stats.txt\" ****\n'
+    # except:
+    #     print '\n   **** Failed: invalid year input ****\n'
+    #     print ''
 
 # ---------------- main ----------------
 
