@@ -16,10 +16,10 @@ def crawl_it(year):
 
 def log_it(year):
     html = open("soup.html")
-    output = open(str(year) + '_stats.txt', "w+")
+    output = open(str(year) + '_stats.csv', "w+")
 
     player_stats, all_stats = [], []
-    all_stats.append(['FIRST', 'LAST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', 'EFG%', 'FTM', 'FTA', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
+    all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', 'EFG%', 'FTM', 'FTA', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
 
     bsoup = BeautifulSoup(html, 'html.parser')
     stats_table = bsoup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
@@ -32,8 +32,8 @@ def log_it(year):
                 if omit == 1:
                     name = attribute['csk']
                     last, first = name.split(',')
-                    player_stats.append(first)
                     player_stats.append(last)
+                    player_stats.append(first)
                 else:
                     player_stats.append(attribute.string)
             omit = omit + 1
@@ -105,8 +105,8 @@ def eww_gui():
 
 # ---------------- main ----------------
 
-eww_gui()
+# eww_gui()
 
-# for year in range(1997, 1998):
-#     crawl_it(year)
-#     log_it(year)
+for year in range(2000, 2010):
+    crawl_it(year)
+    log_it(year)
