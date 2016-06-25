@@ -5,11 +5,10 @@ import os
 import shutil
 from bs4 import BeautifulSoup
 
-def crawl_it(year):
-    
+def crawl_it(year):    
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
-    url_response = requests.get(url)
-    html = url_response.text
+    url_request = requests.get(url)
+    html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
     
     output_file = open("soup.html", "w+")
@@ -24,8 +23,8 @@ def log_it(year):
     all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
     '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
 
-    bsoup = BeautifulSoup(html, 'html.parser')
-    stats_table = bsoup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
+    soup = BeautifulSoup(html, 'html.parser')
+    stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
 
     for row in stats_table:
         omit = 0
