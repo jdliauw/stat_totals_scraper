@@ -5,6 +5,9 @@ import os
 import shutil
 from bs4 import BeautifulSoup
 
+player_url = []
+game_logs = []
+
 def crawl_it(year):    
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
@@ -15,17 +18,17 @@ def crawl_it(year):
     output_file.write(str(soup))
     output_file.close()
 
-def log_it(year):
+
+def log_league_year_stats(year):
     html = open("soup.html")
     output = open(str(year) + '_NBA_TOTALS.csv', "w+")
+    soup = BeautifulSoup(html, 'html.parser')
+    stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
 
     player_stats, all_stats = [], []
     all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
     '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
-
-    soup = BeautifulSoup(html, 'html.parser')
-    stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
-
+    
     for row in stats_table:
         omit = 0
         for attribute in row.findAll('td'):
@@ -53,6 +56,19 @@ def log_it(year):
 
     output.close()
 
+
+
+def log_player_urls(year):
+    html = open("soup.html")
+    soup = BeautifulSoup(html, 'html.parser')
+    a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
+    
+    for a_tag in a_tags:
+        if 'players' in a_tag['href']:
+            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+            if full_url not in player_url:
+                player_url.append(full_url)
+    
 def eww_gui():
     years = []
     hold = []
@@ -118,7 +134,7 @@ def eww_gui():
     try:
         for i in range(0, len(years)):
             crawl_it(years[i])
-            log_it(years[i])
+            log_league_year_stats(years[i])
             file_name = str(years[i]) + '_NBA_TOTALS.csv'
             shutil.move(file_name,destination)
             print '   + Successfully stored ' + str(years[i]) + '_NBA_TOTALS.csv'
@@ -127,6 +143,10 @@ def eww_gui():
 
     print ''
 
+
+
 # ---------------- main ----------------
 
-eww_gui()
+# eww_gui()
+# crawl_it(2016)
+log_player_urls(2016)
