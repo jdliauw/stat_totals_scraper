@@ -8,68 +8,7 @@ from bs4 import BeautifulSoup
 player_url = []
 game_logs = []
 
-def crawl_it(year):    
-    url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
-    url_request = requests.get(url)
-    html = url_request.text
-    soup = BeautifulSoup(html, 'html.parser')
-    
-    output_file = open("soup.html", "w+")
-    output_file.write(str(soup))
-    output_file.close()
-
-
-def log_league_year_stats(year):
-    html = open("soup.html")
-    output = open(str(year) + '_NBA_TOTALS.csv', "w+")
-    soup = BeautifulSoup(html, 'html.parser')
-    stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
-
-    player_stats, all_stats = [], []
-    all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
-    '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
-    
-    for row in stats_table:
-        omit = 0
-        for attribute in row.findAll('td'):
-            if omit != 0:
-
-                if omit == 1:
-                    name = attribute['csk']
-                    last, first = name.split(',')
-                    player_stats.append(last)
-                    player_stats.append(first)
-                else:
-                    player_stats.append(attribute.string)
-            omit = omit + 1
-        
-        if(len(player_stats) > 1):
-            all_stats.append(player_stats)
-        player_stats = []
-        
-    for i in range(0, len(all_stats)):
-        for j in range(0, len(all_stats[i])):
-            output.write(str(all_stats[i][j]))
-            if j != len(all_stats[i])-1:
-                output.write(',')
-        output.write('\n')
-
-    output.close()
-
-
-
-def log_player_urls(year):
-    html = open("soup.html")
-    soup = BeautifulSoup(html, 'html.parser')
-    a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
-    
-    for a_tag in a_tags:
-        if 'players' in a_tag['href']:
-            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            if full_url not in player_url:
-                player_url.append(full_url)
-    
-def eww_gui():
+def run():
     years = []
     hold = []
     print '\n   This script pulls the totals stat table from basketball-reference.com'
@@ -141,12 +80,90 @@ def eww_gui():
     except:
         print '   - Failed to store ' + str(years[i]) + '_NBA_TOTALS.csv'
 
-    print ''
+    print ''  
+# 
+def crawl_it(year):    
+    url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
+    url_request = requests.get(url)
+    html = url_request.text
+    soup = BeautifulSoup(html, 'html.parser')
+    
+    output_file = open("soup.html", "w+")
+    output_file.write(str(soup))
+    output_file.close()
 
+# 
+def log_league_year_stats(year):
+    html = open("soup.html")
+    output = open(str(year) + '_NBA_TOTALS.csv', "w+")
+    soup = BeautifulSoup(html, 'html.parser')
+    stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
 
+    player_stats, all_stats = [], []
+    all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
+    '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
+    
+    for row in stats_table:
+        omit = 0
+        for attribute in row.findAll('td'):
+            if omit != 0:
+
+                if omit == 1:
+                    name = attribute['csk']
+                    last, first = name.split(',')
+                    player_stats.append(last)
+                    player_stats.append(first)
+                else:
+                    player_stats.append(attribute.string)
+            omit = omit + 1
+        
+        if(len(player_stats) > 1):
+            all_stats.append(player_stats)
+        player_stats = []
+        
+    for i in range(0, len(all_stats)):
+        for j in range(0, len(all_stats[i])):
+            output.write(str(all_stats[i][j]))
+            if j != len(all_stats[i])-1:
+                output.write(',')
+        output.write('\n')
+
+    output.close()
+# 
+def get_player_urls(year):
+    html = open("soup.html")
+    soup = BeautifulSoup(html, 'html.parser')
+    a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
+    
+    for a_tag in a_tags:
+        if 'players' in a_tag['href']:
+            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+            if full_url not in player_url:            
+                player_url.append(full_url)
+#
+def get_game_log_urls(url):
+    url_request = requests.get(url)
+    html = url_request.text
+    gsoup = BeautifulSoup(html, 'html.parser')
+    li_tags = gsoup.findAll('li', {'class' : 'narrow'})
+    gsoup2 = BeautifulSoup(str(li_tags), 'html.parser')
+    a_tags = gsoup2.findAll('a')
+    
+    for a_tag in a_tags:
+        if 'gamelog' in a_tag['href']:
+            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+            if full_url not in game_logs:            
+                game_logs.append(full_url)
+            
+    for game_log in game_logs:
+        print str(game_log)
+#
+def 
 
 # ---------------- main ----------------
 
-# eww_gui()
+# run()
 # crawl_it(2016)
-log_player_urls(2016)
+get_player_urls(2016)
+
+get_game_log_urls(player_url[92])
