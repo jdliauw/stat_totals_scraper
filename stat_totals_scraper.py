@@ -93,7 +93,7 @@ def store_league_year_stats(year):
     player_stats, all_stats = [], []
     all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
     '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
-    220
+    
     for row in stats_table:
         omit = 0
         for attribute in row.findAll('td'):
@@ -121,11 +121,11 @@ def store_league_year_stats(year):
     output.close()
 # 
 def store_game_logs(player_url):
-    time.sleep(10)
+    # time.sleep(10)
     url_request = requests.get(player_url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
-    output = open('GAMELOG.csv', "w+")
+    output = open(player_url[-5:-1] + '_GAMELOG.csv', "w+")
     gl_table = soup.find('table', {'class' : 'sortable  row_summable stats_table'}).find('tbody').findAll('tr')
 
     game_stats, game_log = [], []
@@ -191,8 +191,7 @@ def store_game_log_urls(url):
 # store_player_urls(2016)
 # store_game_log_urls(player_url[92])
 # store_league_year_stats(2016)
-# store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
-
+store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
 
 # ---------------- notes ---------------
 
