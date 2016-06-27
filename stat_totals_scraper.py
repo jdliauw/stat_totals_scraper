@@ -72,7 +72,6 @@ def run():
             
     try:
         for i in range(0, len(years)):
-            crawl_it(years[i])
             store_league_year_stats(years[i])
             file_name = str(years[i]) + '_NBA_TOTALS.csv'
             shutil.move(file_name,destination)
@@ -82,18 +81,10 @@ def run():
 
     print ''  
 # 
-def crawl_it(year):
+def store_league_year_stats(year):
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
-    soup = BeautifulSoup(html, 'html.parser')
-    
-    output_file = open("soup.html", "w+")
-    output_file.write(str(soup))
-    output_file.close()
-# 
-def store_league_year_stats(year):
-    html = open("soup.html")
     output = open(str(year) + '_NBA_TOTALS.csv', "w+")
     soup = BeautifulSoup(html, 'html.parser')
     stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
@@ -190,9 +181,8 @@ def store_game_logs(url):
 # ---------------- main ----------------
 
 # run()
-# crawl_it(2015)
 # store_player_urls(2015)
 # store_game_log_urls(player_url[92])
-# store_league_year_stats(2016)
+store_league_year_stats(2016)
 # store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
     
