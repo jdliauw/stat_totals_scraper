@@ -2,6 +2,7 @@ import requests
 import os
 import shutil
 from bs4 import BeautifulSoup
+import time
 # import HTMLParser
 
 player_url = []
@@ -118,8 +119,9 @@ def store_league_year_stats(year):
 
     output.close()
 # 
-def store_game_logs(url):
-    url_request = requests.get(url)
+def store_game_logs(player_url):
+    time.sleep(10)
+    url_request = requests.get(player_url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
     output = open('GAMELOG.csv', "w+")
@@ -188,6 +190,7 @@ def store_game_log_urls(url):
 # store_league_year_stats(2016)
 # store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
 
+
 # ---------------- notes ---------------
 
 '''
@@ -195,14 +198,16 @@ def store_game_log_urls(url):
 What's next:
     
     High priority:
-    1. Make postgres connection
-    2. Store data to database instead of csv
-    3. Generate PER 36 stats (why is it 36, not 48...too much extrapolation?) <--- do this within postgres db
-    4. Apply fantasy rules to calculate:
-        a. daily fpoints, 
-        b. year total fpoints, 
-        c. fpoints stddev,
-        d. average stddev amongst players (min minimum?)
+    + Create key for player
+    + Add delay where necessary
+    + Make postgres connection
+    + Store data to database instead of csv
+    + Generate PER 36 stats (why is it 36, not 48...too much extrapolation?) <--- do this within postgres db
+    + Apply fantasy rules to calculate:
+        + daily fpoints, 
+        + year total fpoints, 
+        + fpoints stddev,
+        + average stddev amongst players (min minimum?)
 
     ---- At this point you have all the data you need ----
 
