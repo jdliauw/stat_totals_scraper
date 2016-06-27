@@ -119,33 +119,6 @@ def store_league_year_stats(year):
 
     output.close()
 # 
-def store_player_urls(year):
-    html = open("soup.html")
-    soup = BeautifulSoup(html, 'html.parser')
-    a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
-    
-    for a_tag in a_tags:
-        if 'players' in a_tag['href']:
-            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            if full_url not in player_url:            
-                player_url.append(full_url)
-#
-def store_game_log_urls(url):
-    url_request = requests.get(url)
-    html = url_request.text
-    li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
-    a_tags = BeautifulSoup(str(li_tags), 'html.parser').findAll('a')
-    del li_tags
-    
-    for a_tag in a_tags:
-        if 'gamelog' in a_tag['href']:
-            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            if full_url not in game_log_url:            
-                game_log_url.append(full_url)
-            
-    for game_log in game_log_url:
-        print str(game_log)
-#
 def store_game_logs(url):
     url_request = requests.get(url)
     html = url_request.text
@@ -177,12 +150,59 @@ def store_game_logs(url):
         output.write('\n')
 
     output.close()
+#
+def store_player_urls(year):
+    html = open("soup.html")
+    soup = BeautifulSoup(html, 'html.parser')
+    a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
+    
+    for a_tag in a_tags:
+        if 'players' in a_tag['href']:
+            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+            if full_url not in player_url:            
+                player_url.append(full_url)
+#
+def store_game_log_urls(url):
+    url_request = requests.get(url)
+    html = url_request.text
+    li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
+    a_tags = BeautifulSoup(str(li_tags), 'html.parser').findAll('a')
+    del li_tags
+    
+    for a_tag in a_tags:
+        if 'gamelog' in a_tag['href']:
+            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+            if full_url not in game_log_url:            
+                game_log_url.append(full_url)
+            
+    for game_log in game_log_url:
+        print str(game_log)
+#
 
 # ---------------- main ----------------
 
 # run()
 # store_player_urls(2015)
 # store_game_log_urls(player_url[92])
-store_league_year_stats(2016)
+# store_league_year_stats(2016)
 # store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
-    
+
+# ---------------- notes ---------------
+
+'''
+
+What's next:
+    High priority:
+    1. Establish postgres connection
+    2. Store data to database instead of csv
+
+    Low priority:
+    1. Improve user interface
+
+    I have a parsing script that grabs a bunch of URLs from a table (player links), then goes to each player page and grabs more URLs (year game logs). 
+    I then go to each year game log and store a table from that url. 
+    By the end I'm suspecting I'll be grabbing about 2500 tables...
+    I don't want to flood the site with too many requests cause that'd be rude and also I don't want to get banned. 
+    How would you suggest doing this and is there a general rule of thumb how many requests I can make per unit time?
+
+'''
