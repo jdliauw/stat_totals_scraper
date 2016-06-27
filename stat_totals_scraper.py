@@ -144,10 +144,9 @@ def get_player_urls(year):
 def get_game_log_urls(url):
     url_request = requests.get(url)
     html = url_request.text
-    gsoup = BeautifulSoup(html, 'html.parser')
-    li_tags = gsoup.findAll('li', {'class' : 'narrow'})
-    gsoup2 = BeautifulSoup(str(li_tags), 'html.parser')
-    a_tags = gsoup2.findAll('a')
+    li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
+    a_tags = BeautifulSoup(str(li_tags), 'html.parser').findAll('a')
+    del li_tags
     
     for a_tag in a_tags:
         if 'gamelog' in a_tag['href']:
@@ -158,12 +157,12 @@ def get_game_log_urls(url):
     for game_log in game_logs:
         print str(game_log)
 #
-def 
+ 
 
 # ---------------- main ----------------
 
 # run()
-# crawl_it(2016)
-get_player_urls(2016)
+crawl_it(2015)
+get_player_urls(2015)
 
 get_game_log_urls(player_url[92])
