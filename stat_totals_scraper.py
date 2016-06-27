@@ -6,7 +6,7 @@ import shutil
 from bs4 import BeautifulSoup
 
 player_url = []
-game_logs = []
+game_log_url = []
 
 def run():
     years = []
@@ -73,7 +73,7 @@ def run():
     try:
         for i in range(0, len(years)):
             crawl_it(years[i])
-            log_league_year_stats(years[i])
+            store_league_year_stats(years[i])
             file_name = str(years[i]) + '_NBA_TOTALS.csv'
             shutil.move(file_name,destination)
             print '   + Successfully stored ' + str(years[i]) + '_NBA_TOTALS.csv'
@@ -82,7 +82,7 @@ def run():
 
     print ''  
 # 
-def crawl_it(year):    
+def crawl_it(year):
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
@@ -91,9 +91,8 @@ def crawl_it(year):
     output_file = open("soup.html", "w+")
     output_file.write(str(soup))
     output_file.close()
-
 # 
-def log_league_year_stats(year):
+def store_league_year_stats(year):
     html = open("soup.html")
     output = open(str(year) + '_NBA_TOTALS.csv', "w+")
     soup = BeautifulSoup(html, 'html.parser')
@@ -102,12 +101,11 @@ def log_league_year_stats(year):
     player_stats, all_stats = [], []
     all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
     '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
-    
+    220
     for row in stats_table:
         omit = 0
         for attribute in row.findAll('td'):
             if omit != 0:
-
                 if omit == 1:
                     name = attribute['csk']
                     last, first = name.split(',')
@@ -130,7 +128,7 @@ def log_league_year_stats(year):
 
     output.close()
 # 
-def get_player_urls(year):
+def store_player_urls(year):
     html = open("soup.html")
     soup = BeautifulSoup(html, 'html.parser')
     a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
@@ -141,7 +139,7 @@ def get_player_urls(year):
             if full_url not in player_url:            
                 player_url.append(full_url)
 #
-def get_game_log_urls(url):
+def store_game_log_urls(url):
     url_request = requests.get(url)
     html = url_request.text
     li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
@@ -151,18 +149,50 @@ def get_game_log_urls(url):
     for a_tag in a_tags:
         if 'gamelog' in a_tag['href']:
             full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            if full_url not in game_logs:            
-                game_logs.append(full_url)
+            if full_url not in game_log_url:            
+                game_log_url.append(full_url)
             
-    for game_log in game_logs:
+    for game_log in game_log_url:
         print str(game_log)
 #
- 
+def store_game_logs(url):
+    url_request = requests.get(url)
+    html = url_request.text
+    soup = BeautifulSoup(html, 'html.parser')
+    output = open('GAMELOG.csv', "w+")
+    gl_table = soup.find('table', {'class' : 'sortable  row_summable stats_table'}).find('tbody').findAll('tr')
+
+    game_stats, game_log = [], []
+
+    game_log.append(['GAME', 'DATE', 'AGE', 'TEAM', 'HOME/AWAY', 'OPP', 'RESULT', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', 
+    'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS', 'GMSC', '+/-', 'DFS'])
+
+    for row in gl_table: 
+        omit = 0
+        for attribute in row.findAll('td'):
+            if omit != 0:
+                game_stats.append(attribute.string)
+            omit = omit + 1
+        
+        if(len(game_stats) > 1 and game_stats[0] != None):
+            game_log.append(game_stats)
+        game_stats = []
+
+    for i in range(0, len(game_log)):
+        for j in range(0, len(game_log[i])):
+            output.write(str(game_log[i][j]))
+            if j != len(game_log[i])-1:
+                output.write(',')
+        output.write('\n')
+
+    output.close()
 
 # ---------------- main ----------------
 
 # run()
-crawl_it(2015)
-get_player_urls(2015)
-
-get_game_log_urls(player_url[92])
+# crawl_it(2015)
+# store_player_urls(2015)
+# store_game_log_urls(player_url[92])
+# store_league_year_stats(2016)
+# store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
+    
