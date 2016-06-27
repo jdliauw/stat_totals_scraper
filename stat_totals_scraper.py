@@ -64,28 +64,21 @@ def run():
            
     years.sort()
     
-    if not os.path.exists('year_stats_files'):
-        os.makedirs('year_stats_files')
-    
-    source = os.path.dirname(os.path.abspath(__file__))
-    year_destination = source + "/year_stats_files"
-            
     try:
         for i in range(0, len(years)):
-            store_league_year_stats(years[i])
-            file_name = str(years[i]) + '_nba_totals.csv'
-            shutil.move(file_name, year_destination)
+            store_year_stats(years[i])
             print '   + Successfully stored ' + str(years[i]) + '_nba_totals.csv'
     except:
         print '   - Failed to store ' + str(years[i]) + '_nba_totals.csv'
 
     print ''  
 #
-def store_league_year_stats(year):
+def store_year_stats(year):
     time.sleep(5)
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
+    file_name = str(year) + '_nba_totals.csv'
     output = open(str(year) + '_nba_totals.csv', "w+") 
     soup = BeautifulSoup(html, 'html.parser')
     stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
@@ -122,9 +115,16 @@ def store_league_year_stats(year):
         output.write('\n')
 
     output.close()
+
+    if not os.path.exists('year_stats_files'):
+        os.makedirs('year_stats_files')
+    
+    source = os.path.dirname(os.path.abspath(__file__))
+    year_destination = source + "/year_stats_files"
+    shutil.move(file_name, year_destination)
 #
 def store_game_logs(player_url):
-    # time.sleep(5)
+    time.sleep(5)
     url_request = requests.get(player_url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
@@ -167,9 +167,8 @@ def store_game_logs(player_url):
         os.makedirs('game_logs/' + pid)
 
     source = os.path.dirname(os.path.abspath(__file__))
-    destination = source + '/game_logs/' + pid
-    shutil.move(file_name, destination)
-
+    gl_destination = source + '/game_logs/' + pid
+    shutil.move(file_name, gl_destination)
 #
 def grab_player_urls(year):
     time.sleep(5)
@@ -208,21 +207,12 @@ def grab_game_log_urls(url):
 # run()
 # grab_player_urls(2016)
 # grab_game_log_urls(player_url[92])
-# store_league_year_stats(2016)
-store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
+# store_year_stats(2016)
+# store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
 
 '''
-
 What's next:
     
-    Overview:
-    1. Grab player urls from totals table
-    2. Grab game log urls from player page
-    3. Store it via store_game_logs 
-
-    Immediate:
-    + Add directories/subdirectories to organize game_log files by player
-
     High priority:
     + Make postgres connection
     + Store data to database instead of csv
@@ -235,11 +225,9 @@ What's next:
 
     ---- At this point you have all the data you need ----
 
-    Questions: 
-    1. How to use data to make projections? Are average and stddev enough? 
-
-
     Low priority:
     1. Improve user interface
 
+    Questions: 
+    1. How to use data to make projections? Are average and stddev enough? 
 '''
