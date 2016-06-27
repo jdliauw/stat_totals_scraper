@@ -82,6 +82,7 @@ def run():
     print ''  
 # 
 def store_league_year_stats(year):
+    time.sleep(10)
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
@@ -153,6 +154,7 @@ def store_game_logs(player_url):
     output.close()
 #
 def store_player_urls(year):
+    time.sleep(10)
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
@@ -166,6 +168,7 @@ def store_player_urls(year):
                 player_url.append(full_url)
 #
 def store_game_log_urls(url):
+    time.sleep(10)
     url_request = requests.get(url)
     html = url_request.text
     li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
