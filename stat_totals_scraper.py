@@ -1,9 +1,8 @@
-import urllib
 import requests
-import HTMLParser
 import os
 import shutil
 from bs4 import BeautifulSoup
+# import HTMLParser
 
 player_url = []
 game_log_url = []
@@ -152,7 +151,9 @@ def store_game_logs(url):
     output.close()
 #
 def store_player_urls(year):
-    html = open("soup.html")
+    url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
+    url_request = requests.get(url)
+    html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
     a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
     
@@ -182,7 +183,7 @@ def store_game_log_urls(url):
 # ---------------- main ----------------
 
 # run()
-# store_player_urls(2015)
+# store_player_urls(2016)
 # store_game_log_urls(player_url[92])
 # store_league_year_stats(2016)
 # store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
