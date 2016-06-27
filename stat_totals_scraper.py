@@ -82,7 +82,7 @@ def run():
     print ''  
 # 
 def store_league_year_stats(year):
-    time.sleep(10)
+    time.sleep(5)
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
@@ -91,7 +91,7 @@ def store_league_year_stats(year):
     stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
 
     player_stats, all_stats = [], []
-    all_stats.append(['LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
+    all_stats.append(['PID','LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
     '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
     
     for row in stats_table:
@@ -99,6 +99,9 @@ def store_league_year_stats(year):
         for attribute in row.findAll('td'):
             if omit != 0:
                 if omit == 1:
+                    pid = attribute.find('a')['href']
+                    pid = pid[pid.rfind('/') + 1 : pid.rfind('.')]
+                    player_stats.append(pid)
                     name = attribute['csk']
                     last, first = name.split(',')
                     player_stats.append(last)
@@ -161,11 +164,13 @@ def store_player_urls(year):
     soup = BeautifulSoup(html, 'html.parser')
     a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
     
+    count = 0
     for a_tag in a_tags:
         if 'players' in a_tag['href']:
             full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            if full_url not in player_url:            
-                player_url.append(full_url)
+            # if full_url not in player_url:            
+            player_url.append(full_url)
+
 #
 def store_game_log_urls(url):
     time.sleep(10)
@@ -184,14 +189,16 @@ def store_game_log_urls(url):
     for game_log in game_log_url:
         print str(game_log)
 #
+def url_parse_player_key(url):
+    pass
 
 # ---------------- main ----------------
 
 # run()
 # store_player_urls(2016)
 # store_game_log_urls(player_url[92])
-# store_league_year_stats(2016)
-store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
+store_league_year_stats(2016)
+# store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
 
 # ---------------- notes ---------------
 
