@@ -192,17 +192,24 @@ def store_game_log_urls(url):
 '''
 
 What's next:
+    
     High priority:
-    1. Establish postgres connection
+    1. Make postgres connection
     2. Store data to database instead of csv
+    3. Generate PER 36 stats (why is it 36, not 48...too much extrapolation?) <--- do this within postgres db
+    4. Apply fantasy rules to calculate:
+        a. daily fpoints, 
+        b. year total fpoints, 
+        c. fpoints stddev,
+        d. average stddev amongst players (min minimum?)
+
+    ---- At this point you have all the data you need ----
+
+    Questions: 
+    1. How to use data to make projections? Are average and stddev enough? 
+
 
     Low priority:
     1. Improve user interface
-
-    I have a parsing script that grabs a bunch of URLs from a table (player links), then goes to each player page and grabs more URLs (year game logs). 
-    I then go to each year game log and store a table from that url. 
-    By the end I'm suspecting I'll be grabbing about 2500 tables...
-    I don't want to flood the site with too many requests cause that'd be rude and also I don't want to get banned. 
-    How would you suggest doing this and is there a general rule of thumb how many requests I can make per unit time?
 
 '''
