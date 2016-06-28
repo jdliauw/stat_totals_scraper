@@ -74,7 +74,7 @@ def run():
     print ''  
 #
 def store_year_stats(year):
-    time.sleep(5)
+    # time.sleep(5)
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
@@ -83,9 +83,7 @@ def store_year_stats(year):
     soup = BeautifulSoup(html, 'html.parser')
     stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
 
-    player_stats, all_stats = [], []
-    all_stats.append(['PID','LAST', 'FIRST','POS', 'AGE', 'TEAM', 'GP', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', '2PM',
-    '2PA', '2P%', 'EFG%', 'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS'])
+    output.write('PID,LAST,FIRST,POS,AGE,TEAM,GP,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,2PM,2PA,2P%,EFG%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS\n')
     
     for row in stats_table:
         omit = 0
@@ -94,26 +92,18 @@ def store_year_stats(year):
                 if omit == 1:
                     pid = attribute.find('a')['href']
                     pid = pid[pid.rfind('/') + 1 : pid.rfind('.')]
-                    player_stats.append(pid)
+                    output.write(pid + ',')
                     name = attribute['csk']
                     last, first = name.split(',')
-                    player_stats.append(last)
-                    player_stats.append(first)
+                    output.write(last + ',')
+                    output.write(first + ',')
+                    del first, last, name
+                elif omit == 29:
+                    output.write(str(attribute.string) + '\n')
                 else:
-                    player_stats.append(attribute.string)
+                    output.write(str(attribute.string) + ',')
             omit = omit + 1
         
-        if(len(player_stats) > 1):
-            all_stats.append(player_stats)
-        player_stats = []
-        
-    for i in range(0, len(all_stats)):
-        for j in range(0, len(all_stats[i])):
-            output.write(str(all_stats[i][j]))
-            if j != len(all_stats[i])-1:
-                output.write(',')
-        output.write('\n')
-
     output.close()
 
     if not os.path.exists('year_stats_files'):
@@ -121,10 +111,13 @@ def store_year_stats(year):
     
     source = os.path.dirname(os.path.abspath(__file__))
     year_destination = source + "/year_stats_files"
+    file_path = year_destination + '/' + file_name
+    if os.path.exists(file_path):
+        os.remove(file_path) # write over file
     shutil.move(file_name, year_destination)
 #
 def store_game_logs(player_url):
-    time.sleep(5)
+    # time.sleep(5)
     url_request = requests.get(player_url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
@@ -135,19 +128,20 @@ def store_game_logs(player_url):
 
     game_stats, game_log = [], []
 
-    game_log.append(['PID', 'GAME', 'DATE', 'AGE', 'TEAM', 'HOME/AWAY', 'OPP', 'RESULT', 'GS', 'MP', 'FGM', 'FGA', 'FG%', '3PM', '3PA', '3P%', 
-    'FTM', 'FTA', 'FT%', 'ORB', 'DRB', 'TRB', 'AST', 'STL', 'BLK', 'TOV', 'PF', 'PTS', 'GMSC', '+/-', 'DFS'])
+    output.write('PID,GAME,DATE,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-,DFS\n')
 
     for row in gl_table: 
         omit = 0
         for attribute in row.findAll('td'):
             if omit == 0:
                 game_stats.append(pid)
+                game_stats.append(attribute.string)
             else:
                 game_stats.append(attribute.string)
             omit = omit + 1
         
-        if(len(game_stats) > 1 and game_stats[1] != None):
+        if(len(game_stats) > 1 and game_stats[2] != None):
+            game_stats.pop(2)
             game_log.append(game_stats)
         game_stats = []
 
@@ -168,6 +162,9 @@ def store_game_logs(player_url):
 
     source = os.path.dirname(os.path.abspath(__file__))
     gl_destination = source + '/game_logs/' + pid
+    file_path = gl_destination + '/' + file_name
+    if os.path.exists(file_path):
+        os.remove(file_path) # write over file
     shutil.move(file_name, gl_destination)
 #
 def grab_player_urls(year):
@@ -208,7 +205,7 @@ def grab_game_log_urls(url):
 # grab_player_urls(2016)
 # grab_game_log_urls(player_url[92])
 # store_year_stats(2016)
-# store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
+store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
 
 '''
 What's next:
