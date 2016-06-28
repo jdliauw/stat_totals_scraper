@@ -116,14 +116,14 @@ def store_year_stats(year):
         os.remove(file_path) # write over file
     shutil.move(file_name, year_destination)
 #
-def store_game_logs(player_url):
+def store_game_logs(player_gl_url):
     # time.sleep(5)
-    url_request = requests.get(player_url)
+    url_request = requests.get(player_gl_url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
-    pid = player_url[player_url.rfind('players') + 10 : -14]
-    file_name = str(pid) + '_' + player_url[-5 : -1] + '_gamelog.csv'
-    output = open(str(pid) + '_' + player_url[-5 : -1] + '_gamelog.csv', "w+")
+    pid = player_gl_url[player_gl_url.rfind('players') + 10 : -14]
+    file_name = str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv'
+    output = open(str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv', "w+")
     gl_table = soup.find('table', {'class' : 'sortable  row_summable stats_table'}).find('tbody').findAll('tr')
 
     game_stats, game_log = [], []
@@ -181,9 +181,9 @@ def grab_player_urls(year):
             # if full_url not in player_url:            
             player_url.append(full_url)
 #
-def grab_game_log_urls(url):
+def grab_game_log_urls(player_url):
     time.sleep(5)
-    url_request = requests.get(url)
+    url_request = requests.get(player_url)
     html = url_request.text
     li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
     a_tags = BeautifulSoup(str(li_tags), 'html.parser').findAll('a')
