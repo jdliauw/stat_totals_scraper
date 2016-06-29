@@ -5,57 +5,61 @@ from bs4 import BeautifulSoup
 import time
 # import HTMLParser
 
+start = time.time()
+
 player_url = []
 game_log_url = []
 
-def store_game_logs(player_gl_url):
+def store_game_logs(player_gl_url, db = 1):
     # time.sleep(5)
     url_request = requests.get(player_gl_url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
     pid = player_gl_url[player_gl_url.rfind('players') + 10 : -14]
-    file_name = str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv'
-    output = open(str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv', "w+")
     gl_table = soup.find('table', {'class' : 'sortable  row_summable stats_table'}).find('tbody').findAll('tr')
 
-    game_stats, game_log = [], []
+    if db == 0:
+        file_name = str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv'
+        output = open(str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv', "w+")
+        output.write('PID,GAME,DATE,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
 
-    output.write('PID,GAME,DATE,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
-
-    for row in gl_table: 
-        omit = 0
-        for attribute in row.findAll('td'):
-            if omit == 0:
-                hold = attribute.string
-            elif omit == 1:
-                if attribute.string == None:
-                    game_stats = []
-                    omit = 0
+        for row in gl_table: 
+            omit = 0
+            for attribute in row.findAll('td'):
+                if omit == 0:
+                    hold = attribute.string
+                elif omit == 1:
+                    if attribute.string == None:
+                        omit = 0
+                        break;
+                    else:
+                        output.write(pid + ',' + hold + ',')
+                        omit = omit + 1
+                        continue;
+                elif omit == 29:
+                    output.write(str(attribute.string) +'\n')
                     break;
                 else:
-                    output.write(pid + ',' + hold + ',')
-                    omit = omit + 1
-                    continue;
-            elif omit == 29:
-                output.write(str(attribute.string) +'\n')
-            else:
-                output.write(str(attribute.string) + ',')
-            omit = omit + 1
+                    output.write(str(attribute.string) + ',')
+                omit = omit + 1
 
-    output.close()
+        output.close()
 
-    if not os.path.exists('game_logs'):
-        os.makedirs('game_logs')
-    
-    if not os.path.exists('game_logs/' + pid):
-        os.makedirs('game_logs/' + pid)
+        if not os.path.exists('game_logs'):
+            os.makedirs('game_logs')
+        
+        if not os.path.exists('game_logs/' + pid):
+            os.makedirs('game_logs/' + pid)
 
-    source = os.path.dirname(os.path.abspath(__file__))
-    gl_destination = source + '/game_logs/' + pid
-    file_path = gl_destination + '/' + file_name
-    if os.path.exists(file_path):
-        os.remove(file_path) # write over file
-    shutil.move(file_name, gl_destination)
+        source = os.path.dirname(os.path.abspath(__file__))
+        gl_destination = source + '/game_logs/' + pid
+        file_path = gl_destination + '/' + file_name
+        if os.path.exists(file_path):
+            os.remove(file_path) # write over file
+        shutil.move(file_name, gl_destination)
+
+    else:
+        pass
 #
 def grab_player_urls(year):
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
@@ -67,8 +71,8 @@ def grab_player_urls(year):
     for a_tag in a_tags:
         if 'players' in a_tag['href']:
             full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            # if full_url not in player_url:            
-            player_url.append(full_url)
+            if full_url not in player_url:            
+                player_url.append(full_url)
 #
 def grab_game_log_urls(player_url):
     time.sleep(5)
@@ -83,9 +87,6 @@ def grab_game_log_urls(player_url):
             full_url = 'http://basketball-reference.com' + str(a_tag['href'])
             if full_url not in game_log_url:            
                 game_log_url.append(full_url)
-            
-    for game_log in game_log_url:
-        print str(game_log)
 #
 
 # ---------------- main ----------------
@@ -93,8 +94,9 @@ def grab_game_log_urls(player_url):
 # run()
 # grab_player_urls(2016)
 # grab_game_log_urls(player_url[92])
-# store_year_stats(2016)
-store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2015/')
+# store_year_stats(2016, 1)
+store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2016/', 1)
+print 'time elapsed:', time.time() - start
 
 '''
 What's next:
@@ -115,48 +117,52 @@ What's next:
 
 '''
 
-def store_year_stats(year):
+def store_year_stats(year, db = 1):
     # time.sleep(5)
     url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
-    file_name = str(year) + '_nba_totals.csv'
-    output = open(str(year) + '_nba_totals.csv', "w+") 
     soup = BeautifulSoup(html, 'html.parser')
     stats_table = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('tr')
 
-    output.write('PID,LAST,FIRST,POS,AGE,TEAM,GP,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,2PM,2PA,2P%,EFG%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS\n')
+    if db == 0:
+        file_name = str(year) + '_nba_totals.csv'
+        output = open(str(year) + '_nba_totals.csv', "w+") 
+        output.write('PID,LAST,FIRST,POS,AGE,TEAM,GP,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,2PM,2PA,2P%,EFG%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS\n')
     
-    for row in stats_table:
-        omit = 0
-        for attribute in row.findAll('td'):
-            if omit != 0:
-                if omit == 1:
-                    pid = attribute.find('a')['href']
-                    pid = pid[pid.rfind('/') + 1 : pid.rfind('.')]
-                    output.write(pid + ',')
-                    name = attribute['csk']
-                    last, first = name.split(',')
-                    output.write(last + ',')
-                    output.write(first + ',')
-                    del first, last, name
-                elif omit == 29:
-                    output.write(str(attribute.string) + '\n')
-                else:
-                    output.write(str(attribute.string) + ',')
-            omit = omit + 1
-        
-    output.close()
+        for row in stats_table:
+            omit = 0
+            for attribute in row.findAll('td'):
+                if omit != 0:
+                    if omit == 1:
+                        pid = attribute.find('a')['href']
+                        pid = pid[pid.rfind('/') + 1 : pid.rfind('.')]
+                        output.write(pid + ',')
+                        name = attribute['csk']
+                        last, first = name.split(',')
+                        output.write(last + ',')
+                        output.write(first + ',')
+                        del first, last, name
+                    elif omit == 29:
+                        output.write(str(attribute.string) + '\n')
+                    else:
+                        output.write(str(attribute.string) + ',')
+                omit = omit + 1
+            
+        output.close()
 
-    if not os.path.exists('year_stats_files'):
-        os.makedirs('year_stats_files')
-    
-    source = os.path.dirname(os.path.abspath(__file__))
-    year_destination = source + "/year_stats_files"
-    file_path = year_destination + '/' + file_name
-    if os.path.exists(file_path):
-        os.remove(file_path) # write over file
-    shutil.move(file_name, year_destination)
+        if not os.path.exists('year_stats_files'):
+            os.makedirs('year_stats_files')
+        
+        source = os.path.dirname(os.path.abspath(__file__))
+        year_destination = source + "/year_stats_files"
+        file_path = year_destination + '/' + file_name
+        if os.path.exists(file_path):
+            os.remove(file_path) # write over file
+        shutil.move(file_name, year_destination)
+
+    else:
+        pass
 
 def run():
     years = []
