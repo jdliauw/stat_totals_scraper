@@ -1,9 +1,9 @@
 import requests
+from bs4 import BeautifulSoup
+import psycopg2
 import os
 import shutil
-from bs4 import BeautifulSoup
 import time
-# import HTMLParser
 
 start = time.time()
 
@@ -91,18 +91,55 @@ def grab_game_log_urls(player_url):
 
 # ---------------- main ----------------
 
+connection = psycopg2.connect(database="nba_stats_db", host="127.0.0.1", port="5432")
+cursor = connection.cursor()
+cursor.execute('''
+    CREATE TABLE "game_logs"
+    ("pid" TEXT,
+    "game" INT,
+    "date" TEXT,
+    "age" REAL,
+    "team" TEXT,
+    "home/away" BOOLEAN,
+    "opp" TEXT,
+    "result" TEXT,
+    "gs" BOOLEAN,
+    "mp" REAL,
+    "fgm" INT,
+    "fga" INT,
+    "fg%" REAL,
+    "3pm" INT,
+    "3pa" INT, 
+    "3p%" REAL,
+    "ftm" INT,
+    "fta" INT,
+    "ft%" REAL,
+    "orb" INT,
+    "drb" INT,
+    "trb" INT,
+    "ast" INT,
+    "stl" INT,
+    "blk" INT,
+    "tov" INT,
+    "pf" INT,
+    "gmsc" REAL,
+    "+/-" INT)
+    ''')
+
+connection.commit()
+connection.close()
+
 # run()
 # grab_player_urls(2016)
 # grab_game_log_urls(player_url[92])
 # store_year_stats(2016, 1)
-store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2016/', 1)
+# store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2016/', 1)
 print 'time elapsed:', time.time() - start
 
 '''
 What's next:
 
     High priority:
-    + Make postgres connection
     + Store data to database instead of csv
     + Add daily fpoints column
     + Calculate
