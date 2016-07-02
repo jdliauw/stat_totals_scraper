@@ -6,94 +6,14 @@ import shutil
 import time
 
 start = time.time()
+# connection = psycopg2.connect(database="nba_stats_db", host="127.0.0.1", port="5432")
+# cursor = connection.cursor()
 
 player_url = []
 game_log_url = []
 
-def store_game_logs(player_gl_url, db = 1):
-    # time.sleep(5)
-    url_request = requests.get(player_gl_url)
-    html = url_request.text
-    soup = BeautifulSoup(html, 'html.parser')
-    pid = player_gl_url[player_gl_url.rfind('players') + 10 : -14]
-    gl_table = soup.find('table', {'class' : 'sortable  row_summable stats_table'}).find('tbody').findAll('tr')
-
-    if db == 0:
-        file_name = str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv'
-        output = open(str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv', "w+")
-        output.write('PID,GAME,DATE,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
-
-        for row in gl_table: 
-            omit = 0
-            for attribute in row.findAll('td'):
-                if omit == 0:
-                    hold = attribute.string
-                elif omit == 1:
-                    if attribute.string == None:
-                        omit = 0
-                        break;
-                    else:
-                        output.write(pid + ',' + hold + ',')
-                        omit = omit + 1
-                        continue;
-                elif omit == 29:
-                    output.write(str(attribute.string) +'\n')
-                    break;
-                else:
-                    output.write(str(attribute.string) + ',')
-                omit = omit + 1
-
-        output.close()
-
-        if not os.path.exists('game_logs'):
-            os.makedirs('game_logs')
-        
-        if not os.path.exists('game_logs/' + pid):
-            os.makedirs('game_logs/' + pid)
-
-        source = os.path.dirname(os.path.abspath(__file__))
-        gl_destination = source + '/game_logs/' + pid
-        file_path = gl_destination + '/' + file_name
-        if os.path.exists(file_path):
-            os.remove(file_path) # write over file
-        shutil.move(file_name, gl_destination)
-
-    else:
-        pass
-#
-def grab_player_urls(year):
-    url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
-    url_request = requests.get(url)
-    html = url_request.text
-    soup = BeautifulSoup(html, 'html.parser')
-    a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
-    
-    for a_tag in a_tags:
-        if 'players' in a_tag['href']:
-            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            if full_url not in player_url:            
-                player_url.append(full_url)
-#
-def grab_game_log_urls(player_url):
-    time.sleep(5)
-    url_request = requests.get(player_url)
-    html = url_request.text
-    li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
-    a_tags = BeautifulSoup(str(li_tags), 'html.parser').findAll('a')
-    del li_tags
-    
-    for a_tag in a_tags:
-        if 'gamelog' in a_tag['href']:
-            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            if full_url not in game_log_url:            
-                game_log_url.append(full_url)
-#
-
-# ---------------- main ----------------
-
-connection = psycopg2.connect(database="nba_stats_db", host="127.0.0.1", port="5432")
-cursor = connection.cursor()
-cursor.execute('''
+def create_table():
+    cursor.execute('''
     CREATE TABLE "game_logs"
     ("pid" TEXT,
     "game" INT,
@@ -126,21 +46,154 @@ cursor.execute('''
     "+/-" INT)
     ''')
 
-connection.commit()
-connection.close()
+    connection.commit()
 
-# run()
+def store_game_logs(player_gl_url, db = 1):
+    # time.sleep(5)
+    url_request = requests.get(player_gl_url)
+    html = url_request.text
+    soup = BeautifulSoup(html, 'html.parser')
+    pid = player_gl_url[player_gl_url.rfind('players') + 10 : -14]
+    gl_table = soup.find('table', {'class' : 'sortable  row_summable stats_table'}).find('tbody').findAll('tr')
+    first, last = soup.find('h1').string.rsplit(' ',3)[0].split(' ',1)
+
+    if db == 0:
+        file_name = str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv'
+        output = open(str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv', "w+")
+        output.write('PID,FIRST,LAST,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
+
+        for row in gl_table: 
+            glt_index = 0
+            for attribute in row.findAll('td'):
+                if glt_index == 0:
+                    hold = attribute.string
+                elif glt_index == 1:
+                    if attribute.string == None:
+                        glt_index = 0
+                        break;
+                    else:
+                        output.write(pid + ',' + first + ',' + last + ',' + hold + ',')
+                        glt_index = glt_index + 1
+                        continue;
+                elif glt_index == 2:
+                    year, month, day = attribute.string.split('-')
+                    output.write(year + ',' + month + ',' + day + ',')
+                elif glt_index == 3:
+                    years = attribute.string.split('-')
+                    days = float(years[1])/365.25
+                    years = float(years[0]) + float(days)
+                    output.write(str(years) + ',')
+                elif glt_index == 5:
+                    if attribute.string == '@':
+                       output.write('AWAY' + ',') 
+                    else:
+                        output.write('HOME' + ',')
+                elif glt_index == 7:
+                    if 'W' in attribute.string:
+                        w = attribute.string[attribute.string.find('+') + 1 : attribute.string.rfind(')')]
+                        output.write(w + ',')
+                    else:
+                        l = attribute.string[attribute.string.find('-') : attribute.string.rfind(')')]
+                        output.write(l + ',')
+                elif glt_index == 8:
+                    if attribute.string == '1':
+                        output.write('TRUE' + ',')
+                    else:
+                        output.write('FALSE' + ',')
+                elif glt_index == 9:
+                    mp = attribute.string.split(':')
+                    if len(mp) == 3:
+                        mp = float(mp[0]) + float(mp[1])/60 + float(mp[2])/360
+                        output.write(str(mp) + ',')
+                    else:
+                        mp = float(mp[0]) + float(mp[1])/60
+                        output.write(str(mp) + ',')
+                elif glt_index == 29:
+                    output.write(str(attribute.string) +'\n')
+                    break;
+                else:
+                    output.write(str(attribute.string) + ',')
+                glt_index = glt_index + 1
+
+        output.close()
+        
+        if not os.path.exists('game_logs/' + pid):
+            os.makedirs('game_logs/' + pid)
+
+        source = os.path.dirname(os.path.abspath(__file__))
+        gl_destination = source + '/game_logs/' + pid
+        file_path = gl_destination + '/' + file_name
+        if os.path.exists(file_path):
+            os.remove(file_path) # write over file
+        shutil.move(file_name, gl_destination)
+
+    # else:
+#
+
+# 33 +/-, -1, 0, 1
+
+# w = '+4'
+# l = '-4'
+# n = '0'
+
+# if '+' in w and True == False:
+#   w = w[w.find('+'):]
+#   print w
+# elif '-' in l and True == False:
+#   l = l[l.find('-'):]
+#   print l
+# else:
+#   print n
+
+
+
+def grab_player_urls(year):
+    url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
+    url_request = requests.get(url)
+    html = url_request.text
+    soup = BeautifulSoup(html, 'html.parser')
+    a_tags = soup.find('table', {'class' : 'sortable  stats_table'}).find('tbody').findAll('a')
+    
+    for a_tag in a_tags:
+        if 'players' in a_tag['href']:
+            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+            if full_url not in player_url:            
+                player_url.append(full_url)
+#
+def grab_game_log_urls(player_url):
+    time.sleep(5)
+    url_request = requests.get(player_url)
+    html = url_request.text
+    li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
+    a_tags = BeautifulSoup(str(li_tags), 'html.parser').findAll('a')
+    del li_tags
+    
+    for a_tag in a_tags:
+        if 'gamelog' in a_tag['href']:
+            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+            if full_url not in game_log_url:            
+                game_log_url.append(full_url)
+#
+
+# ---------------- main ----------------
+
+# create_table()
 # grab_player_urls(2016)
-# grab_game_log_urls(player_url[92])
-# store_year_stats(2016, 1)
-# store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2016/', 1)
+# for i in range(len(player_url)):
+    # grab_game_log_urls(player_url[i])
+    # for j in range(len(game_log_url)):
+        # store_game_logs(game_log_url)
+
+store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2016/', 0)
+
+# connection.close()
 print 'time elapsed:', time.time() - start
 
 '''
 What's next:
 
     High priority:
-    + Store data to database instead of csv
+    + Store data to database
     + Add daily fpoints column
     + Calculate
         + year total fpoints,
