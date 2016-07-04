@@ -8,9 +8,10 @@ import time
 start = time.time()
 # connection = psycopg2.connect(database="nba_stats_db", host="127.0.0.1", port="5432")
 # cursor = connection.cursor()
-
 player_url = []
 game_log_url = []
+# output = open('2015-2016_gamelogs.csv', "w+")
+# output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
 
 def create_table():
     cursor.execute('''
@@ -53,21 +54,27 @@ def create_table():
     connection.commit()
 
 def store_game_logs(player_gl_url, db = 1):
-    # time.sleep(5)
+    time.sleep(5)
     url_request = requests.get(player_gl_url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
     pid = player_gl_url[player_gl_url.rfind('players') + 10 : -14]
     gl_table = soup.find('table', {'class' : 'sortable  row_summable stats_table'}).find('tbody').findAll('tr')
-    first, last = soup.find('h1').string.rsplit(' ',3)[0].split(' ',1)
-    season = str(int(player_gl_url[-5:-1])-1) + '-' + str(player_gl_url[-5 : -1])
+    
+    try:
+        first, last = soup.find('h1').string.rsplit(' ',3)[0].split(' ',1)
+    except:
+        first = ''
+        last = soup.find('h1').string.rsplit(' ',3)[0]
+    season = str(int(player_gl_url[-5 : -1]) -1) + '-' + str(player_gl_url[-5 : -1])
 
     if db == 0:
         file_name = str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv'
-        output
-        output = open(str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv', "w+")
-        output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
+        # output = open('2015-2016_gamelogs.csv', "w+")
+        # output = open(str(pid) + '_' + player_gl_url[-5 : -1] + '_gamelog.csv', "w+")
+        # output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
 
+    with open('2015-2016_gamelogs.csv', "a") as output:
         for row in gl_table: 
             glt_index = 0
             for attribute in row.findAll('td'):
@@ -121,17 +128,17 @@ def store_game_logs(player_gl_url, db = 1):
                     output.write(str(attribute.string) + ',')
                 glt_index = glt_index + 1
 
-        output.close()
+        # output.close()
         
-        if not os.path.exists('game_logs/' + pid):
-            os.makedirs('game_logs/' + pid)
+        # if not os.path.exists('game_logs/' + pid):
+        #     os.makedirs('game_logs/' + pid)
 
-        source = os.path.dirname(os.path.abspath(__file__))
-        gl_destination = source + '/game_logs/' + pid
-        file_path = gl_destination + '/' + file_name
-        if os.path.exists(file_path):
-            os.remove(file_path) # write over file
-        shutil.move(file_name, gl_destination)
+        # source = os.path.dirname(os.path.abspath(__file__))
+        # gl_destination = source + '/game_logs/' + pid
+        # file_path = gl_destination + '/' + file_name
+        # if os.path.exists(file_path):
+        #     os.remove(file_path) # write over file
+        # shutil.move(file_name, gl_destination)
 
     # else:
     #     for row in gl_table: 
@@ -209,22 +216,27 @@ def grab_game_log_urls(player_url):
     del li_tags
     
     for a_tag in a_tags:
-        if 'gamelog' in a_tag['href']:
+        if 'gamelog' in a_tag['href'] and '2016' in a_tag['href']:
             full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+
             if full_url not in game_log_url:            
                 game_log_url.append(full_url)
 #
 
 # ---------------- main ----------------
 
-# create_table()
-# grab_player_urls(2016)
-# for i in range(len(player_url)):
-    # grab_game_log_urls(player_url[i])
-    # for j in range(len(game_log_url)):
-        # store_game_logs(game_log_url)
+# with open('2015-2016_gamelogs.csv', "a") as output:
+#     output.write('\n')
+grab_player_urls(2016)
 
-store_game_logs('http://www.basketball-reference.com/players/c/conlemi01/gamelog/2016/', 0)
+# print player_url.index('http://basketball-reference.com/players/h/hilarne01.html')
+for i in range(194,len(player_url)):
+    grab_game_log_urls(player_url[i])
+    # for j in range(len(game_log_url)):
+        # print game_log_url
+    store_game_logs(game_log_url[0], 0)
+    game_log_url = []
+# output.close()
 
 # connection.close()
 print '\n*------------------------------*\n| time elapsed:', time.time() - start, ' |\n*------------------------------*\n'
