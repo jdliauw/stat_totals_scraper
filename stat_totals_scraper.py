@@ -115,8 +115,8 @@ def run():
     print ''  
 
 def grab_player_urls(year):
-    player_url = []
-    url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
+    plurls = []
+    url = 'http://www.basketball-reference.com/leagues/NBA_{0}_totals.html'.format(year)
     url_request = requests.get(url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
@@ -125,30 +125,37 @@ def grab_player_urls(year):
     for a_tag in a_tags:
         if 'players' in a_tag['href']:
             full_url = 'http://basketball-reference.com' + str(a_tag['href'])
-            if full_url not in player_url:            
-                player_url.append(full_url)
+            if full_url not in plurls:            
+                plurls.append(full_url)
 
-    return player_url
+    return plurls
 
 def grab_game_log_urls(player_url, year):
-    time.sleep(3.5)
-    game_log_url = []
-    url_request = requests.get(player_url)
-    html = url_request.text
-    li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
-    a_tags = BeautifulSoup(str(li_tags), 'html.parser').findAll('a')
-    del li_tags
+
+    glurl = []
+    for i in range(0, len(player_url)):
+        glurl.append(player_url[i][:-5] + '/gamelog/{0}/'.format(year))
+
+    return glurl
+
+    # time.sleep(3.5)
+    # game_log_url = []
+    # url_request = requests.get(player_url)
+    # html = url_request.text
+    # li_tags = BeautifulSoup(html, 'html.parser').findAll('li', {'class' : 'narrow'})
+    # a_tags = BeautifulSoup(str(li_tags), 'html.parser').findAll('a')
+    # del li_tags
     
-    for a_tag in a_tags:
-        if 'gamelog' in a_tag['href'] and str(year) in a_tag['href']:
-            full_url = 'http://basketball-reference.com' + str(a_tag['href'])
+    # for a_tag in a_tags:
+    #     if 'gamelog' in a_tag['href'] and str(year) in a_tag['href']:
+    #         full_url = 'http://basketball-reference.com' + str(a_tag['href'])
 
-            if full_url not in game_log_url:            
-                game_log_url.append(full_url)
+    #         if full_url not in game_log_url:            
+    #             game_log_url.append(full_url)
 
-    return game_log_url
+    # return game_log_url
 
-def store_game_logs(player_gl_url):
+def store_game_logs(player_gl_url, ofn):
     time.sleep(3.5)
     url_request = requests.get(player_gl_url)
     html = url_request.text
@@ -164,7 +171,7 @@ def store_game_logs(player_gl_url):
 
     season = str(int(player_gl_url[-5 : -1]) -1) + '-' + str(player_gl_url[-5 : -1])
 
-    with open('2014-2015_gamelogs.csv', "a") as output:
+    with open(ofn, "a") as output:
         for row in gl_table: 
             glt_index = 0
             for attribute in row.findAll('td'):
@@ -179,38 +186,45 @@ def store_game_logs(player_gl_url):
                         glt_index = glt_index + 1
                         continue;
                 elif glt_index == 2:
-                    year, month, day = attribute.string.split('-')
-                    output.write(year + ',' + month + ',' + day + ',')
+                    if attribute.string is not None:
+                        year, month, day = attribute.string.split('-')
+                        output.write(year + ',' + month + ',' + day + ',')
                 elif glt_index == 3:
-                    years = attribute.string.split('-')
-                    days = float(years[1])/365.25
-                    years = float(years[0]) + float(days)
-                    output.write(str(years) + ',')
+                    if attribute.string is not None:
+                        years = attribute.string.split('-')
+                        days = float(years[1])/365.25
+                        years = float(years[0]) + float(days)
+                        output.write(str(years) + ',')
                 elif glt_index == 5:
-                    if attribute.string == '@':
-                       output.write('AWAY' + ',') 
-                    else:
-                        output.write('HOME' + ',')
-                elif glt_index == 7:
-                    if 'W' in attribute.string:
-                        w = attribute.string[attribute.string.find('+') + 1 : attribute.string.rfind(')')]
-                        output.write(w + ',')
-                    else:
-                        l = attribute.string[attribute.string.find('-') : attribute.string.rfind(')')]
-                        output.write(l + ',')
+                    if attribute.string is not None:
+                        if attribute.string == '@':
+                            output.write('AWAY' + ',') 
+                        else:
+                            output.write('HOME' + ',')
+                elif glt_index == 7:            
+                    if attribute.string is not None:
+                        if 'W' in attribute.string:
+                            w = attribute.string[attribute.string.find('+') + 1 : attribute.string.rfind(')')]
+                            output.write(w + ',')
+                        else:
+                            l = attribute.string[attribute.string.find('-') : attribute.string.rfind(')')]
+                            output.write(l + ',')
                 elif glt_index == 8:
-                    if attribute.string == '1':
-                        output.write('TRUE' + ',')
-                    else:
-                        output.write('FALSE' + ',')
+                    if attribute.string is not None:
+                        if attribute.string == '1':
+                            output.write('TRUE' + ',')
+                        else:
+                            output.write('FALSE' + ',')
                 elif glt_index == 9:
-                    mp = attribute.string.split(':')
-                    if len(mp) == 3:
-                        mp = float(mp[0]) + float(mp[1])/60 + float(mp[2])/360
-                        output.write(str(mp) + ',')
-                    else:
-                        mp = float(mp[0]) + float(mp[1])/60
-                        output.write(str(mp) + ',')
+                    if attribute.string is not None:
+                        mp = attribute.string.split(':')
+
+                        if len(mp) == 3:
+                            mp = float(mp[0]) + float(mp[1])/60 + float(mp[2])/360
+                            output.write(str(mp) + ',')
+                        else:
+                            mp = float(mp[0]) + float(mp[1])/60
+                            output.write(str(mp) + ',')
                 elif glt_index == 29:
                     output.write(str(attribute.string) +'\n')
                     break;
@@ -218,20 +232,20 @@ def store_game_logs(player_gl_url):
                     output.write(str(attribute.string) + ',')
                 glt_index = glt_index + 1
         
-output = open('2014-2015_gamelogs.csv', "w+")
-output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
+def execute():
+    year = str(2013)
+    ofn = '{0}-{1}_stats.csv'.format(year,str(int(year)+1))
+    purls = grab_player_urls(year)
+    glurls = grab_game_log_urls(purls, year)
 
-year = 2015
-purls = grab_player_urls(year)
+    output = open(ofn, "a")
+    output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
 
-for i in range(0,len(purls)):
-    glurls = grab_game_log_urls(purls[i], year)
-    print glurls[0]
-    store_game_logs(glurls[0])
+    for i in range(0,len(glurls)):
+        print glurls[i]
+        store_game_logs(glurls[i], ofn)
 
-output.close()
+    output.close()
 
+execute()
 print '\ntime elapsed:', time.time() - start, '\n'
-
-# with open('2014-2015_gamelogs.csv', "a") as output:
-#     output.write('\n')
