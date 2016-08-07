@@ -90,7 +90,7 @@ def grab_game_log_urls(player_url, year):
 
     # return game_log_url
 
-def store_game_logs(player_gl_url, ofn):
+def store_game_logs(player_gl_url, output):
     time.sleep(3.5)
     url_request = requests.get(player_gl_url)
     html = url_request.text
@@ -106,92 +106,88 @@ def store_game_logs(player_gl_url, ofn):
 
     season = str(int(player_gl_url[-5 : -1]) -1) + '-' + str(player_gl_url[-5 : -1])
 
-    with open(ofn, "a") as output:
-        for row in gl_table: 
-            glt_index = 0
-            for attribute in row.findAll('td'):
-                if glt_index == 0:
-                    hold = attribute.string
-                elif glt_index == 1:
-                    if attribute.string == None:
-                        glt_index = 0
-                        break;
-                    else:
-                        output.write(pid + ',' + first + ',' + last + ',' + season + ',' + hold + ',')
-                        glt_index = glt_index + 1
-                        continue;
-                elif glt_index == 2:
-                    if attribute.string is not None:
-                        year, month, day = attribute.string.split('-')
-                        output.write(year + ',' + month + ',' + day + ',')
-                    else:
-                        output.write('None, None, None,')
-                elif glt_index == 3:
-                    if attribute.string is not None:
-                        years = attribute.string.split('-')
-                        days = float(years[1])/365.25
-                        years = float(years[0]) + float(days)
-                        output.write(str(years) + ',')
-                    else:
-                        output.write('None,')
-                elif glt_index == 5:
-                    if attribute.string is not None:
-                        if attribute.string == '@':
-                            output.write('AWAY' + ',') 
-                        else:
-                            output.write('HOME' + ',')
-                    else:
-                        output.write('None,')
-                elif glt_index == 7:            
-                    if attribute.string is not None:
-                        if 'W' in attribute.string:
-                            w = attribute.string[attribute.string.find('+') + 1 : attribute.string.rfind(')')]
-                            output.write(w + ',')
-                        else:
-                            l = attribute.string[attribute.string.find('-') : attribute.string.rfind(')')]
-                            output.write(l + ',')
-                    else:
-                        output.write('None,')
-                elif glt_index == 8:
-                    if attribute.string is not None:
-                        if attribute.string == '1':
-                            output.write('TRUE' + ',')
-                        else:
-                            output.write('FALSE' + ',')
-                    else:
-                        output.write('None,')
-                elif glt_index == 9:
-                    if attribute.string is not None:
-                        mp = attribute.string.split(':')
-
-                        if len(mp) == 3:
-                            mp = float(mp[0]) + float(mp[1])/60 + float(mp[2])/360
-                            output.write(str(mp) + ',')
-                        else:
-                            mp = float(mp[0]) + float(mp[1])/60
-                            output.write(str(mp) + ',')
-                    else:
-                        output.write('None,')
-                elif glt_index == 29:
-                    output.write(str(attribute.string) +'\n')
+    # with open(ofn, "a") as output:
+    for row in gl_table: 
+        glt_index = 0
+        for attribute in row.findAll('td'):
+            if glt_index == 0:
+                hold = attribute.string
+            elif glt_index == 1:
+                if attribute.string == None:
+                    glt_index = 0
                     break;
                 else:
-                    output.write(str(attribute.string) + ',')
-                glt_index = glt_index + 1
+                    output.write(pid + ',' + first + ',' + last + ',' + season + ',' + hold + ',')
+                    glt_index = glt_index + 1
+                    continue;
+            elif glt_index == 2:
+                if attribute.string is not None:
+                    year, month, day = attribute.string.split('-')
+                    output.write(year + ',' + month + ',' + day + ',')
+                else:
+                    output.write('None, None, None,')
+            elif glt_index == 3:
+                if attribute.string is not None:
+                    years = attribute.string.split('-')
+                    days = float(years[1])/365.25
+                    years = float(years[0]) + float(days)
+                    output.write(str(years) + ',')
+                else:
+                    output.write('None,')
+            elif glt_index == 5:
+                if attribute.string == '@':
+                    output.write('AWAY' + ',') 
+                else:
+                    output.write('HOME' + ',')
+            elif glt_index == 7:            
+                if attribute.string is not None:
+                    if 'W' in attribute.string:
+                        w = attribute.string[attribute.string.find('+') + 1 : attribute.string.rfind(')')]
+                        output.write(w + ',')
+                    else:
+                        l = attribute.string[attribute.string.find('-') : attribute.string.rfind(')')]
+                        output.write(l + ',')
+                else:
+                    output.write('None,')
+            elif glt_index == 8:
+                if attribute.string is not None:
+                    if attribute.string == '1':
+                        output.write('TRUE' + ',')
+                    else:
+                        output.write('FALSE' + ',')
+                else:
+                    output.write('None,')
+            elif glt_index == 9:
+                if attribute.string is not None:
+                    mp = attribute.string.split(':')
+
+                    if len(mp) == 3:
+                        mp = float(mp[0]) + float(mp[1])/60 + float(mp[2])/360
+                        output.write(str(mp) + ',')
+                    else:
+                        mp = float(mp[0]) + float(mp[1])/60
+                        output.write(str(mp) + ',')
+                else:
+                    output.write('None,')
+            elif glt_index == 29:
+                output.write(str(attribute.string) +'\n')
+                break;
+            else:
+                output.write(str(attribute.string) + ',')
+            glt_index = glt_index + 1
         
 def run():
 
     year = str(input('Enter the YEAR you want to collect game log stats from: ')).strip()
     ofn = '{0}-{1}_stats.csv'.format(year,str(int(year)+1))
+    output = open(ofn, "w+")
+    output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
     purls = grab_player_urls(year)
     glurls = grab_game_log_urls(purls, year)
-
-    output = open(ofn, "a")
-    output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
-
+   
     for i in range(0,len(glurls)):
         print glurls[i]
-        store_game_logs(glurls[i], ofn)
+        store_game_logs(glurls[i], output)
 
     output.close()
 
