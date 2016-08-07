@@ -6,9 +6,9 @@ import time
 
 start = time.time()
 
-def store_year_stats(year, db = 1):
+def store_year_stats(year):
     # time.sleep(5)
-    url = 'http://www.basketball-reference.com/leagues/NBA_' + str(year) + '_totals.html'
+    url = 'http://www.basketball-reference.com/leagues/NBA_' + year + '_totals.html'
     url_request = requests.get(url)
     html = url_request.text
     soup = BeautifulSoup(html, 'html.parser')
@@ -43,76 +43,11 @@ def store_year_stats(year, db = 1):
         os.makedirs('year_stats_files')
     
     source = os.path.dirname(os.path.abspath(__file__))
-    year_destination = source + "/year_stats_files"
+    year_destination = source + "/year_stats_file"
     file_path = year_destination + '/' + file_name
     if os.path.exists(file_path):
         os.remove(file_path) # write over file
     shutil.move(file_name, year_destination)
-
-def run():
-    years = []
-    hold = []
-    print '\n   This script pulls the totals stat table from basketball-reference.com'
-    print '   for a given year/s and stores it to a new directory \'year_stats_files\' in the format:'
-    print '   \"year_nba_totals.csv\"\n'
-    print '   If you want to pull:'
-    print '   * a single year, just type the year'
-    print '   * from multiple years, separate each year by a space'
-    print '   * from a range of years, separate by the years by a \'-\' (ex: 1996-1997)'
-
-    print ''
-    selection = raw_input("   Year(s) selection: ")
-
-    if ' ' not in selection and '-' not in selection:
-        years.append(selection)
-
-    elif ' ' in selection:
-        years = selection.split(' ')
-
-        flag = True
-        i = 0
-
-        while flag:
-
-            if '-' in years[i]:
-                hold = years[i].split('-')
-
-                for j in range(int(hold[1])  + 1 - int(hold[0])):
-                    hold.append(str(int(hold[0]) + j))
-
-                hold.remove(hold[0])
-                hold.remove(hold[0])                
-
-                for k in range(0, len(hold)):
-                    if(hold[k] not in years):
-                        years.append(hold[k])
-                years.remove(years[i])
-                i = i - 1
-
-            i = i + 1
-
-            if i == len(years):
-                flag = False
-
-    else:
-        years = selection.split('-')
-
-        for i in range(int(years[1]) + 1 - int(years[0])):
-            years.append(str(int(years[0]) + i))
-
-        years.remove(years[0])
-        years.remove(years[0])
-           
-    years.sort()
-    
-    try:
-        for i in range(0, len(years)):
-            store_year_stats(years[i])
-            print '   + Successfully stored ' + str(years[i]) + '_nba_totals.csv'
-    except:
-        print '   - Failed to store ' + str(years[i]) + '_nba_totals.csv'
-
-    print ''  
 
 def grab_player_urls(year):
     plurls = []
@@ -189,18 +124,24 @@ def store_game_logs(player_gl_url, ofn):
                     if attribute.string is not None:
                         year, month, day = attribute.string.split('-')
                         output.write(year + ',' + month + ',' + day + ',')
+                    else:
+                        output.write('None, None, None,')
                 elif glt_index == 3:
                     if attribute.string is not None:
                         years = attribute.string.split('-')
                         days = float(years[1])/365.25
                         years = float(years[0]) + float(days)
                         output.write(str(years) + ',')
+                    else:
+                        output.write('None,')
                 elif glt_index == 5:
                     if attribute.string is not None:
                         if attribute.string == '@':
                             output.write('AWAY' + ',') 
                         else:
                             output.write('HOME' + ',')
+                    else:
+                        output.write('None,')
                 elif glt_index == 7:            
                     if attribute.string is not None:
                         if 'W' in attribute.string:
@@ -209,12 +150,16 @@ def store_game_logs(player_gl_url, ofn):
                         else:
                             l = attribute.string[attribute.string.find('-') : attribute.string.rfind(')')]
                             output.write(l + ',')
+                    else:
+                        output.write('None,')
                 elif glt_index == 8:
                     if attribute.string is not None:
                         if attribute.string == '1':
                             output.write('TRUE' + ',')
                         else:
                             output.write('FALSE' + ',')
+                    else:
+                        output.write('None,')
                 elif glt_index == 9:
                     if attribute.string is not None:
                         mp = attribute.string.split(':')
@@ -225,6 +170,8 @@ def store_game_logs(player_gl_url, ofn):
                         else:
                             mp = float(mp[0]) + float(mp[1])/60
                             output.write(str(mp) + ',')
+                    else:
+                        output.write('None,')
                 elif glt_index == 29:
                     output.write(str(attribute.string) +'\n')
                     break;
@@ -232,8 +179,9 @@ def store_game_logs(player_gl_url, ofn):
                     output.write(str(attribute.string) + ',')
                 glt_index = glt_index + 1
         
-def execute():
-    year = str(2013)
+def run():
+
+    year = str(input('Enter the YEAR you want to collect game log stats from: ')).strip()
     ofn = '{0}-{1}_stats.csv'.format(year,str(int(year)+1))
     purls = grab_player_urls(year)
     glurls = grab_game_log_urls(purls, year)
@@ -247,5 +195,7 @@ def execute():
 
     output.close()
 
-execute()
-print '\ntime elapsed:', time.time() - start, '\n'
+    print '\ntime elapsed:', time.time() - start, '\n'
+
+if __name__ == '__main__':
+    run()
