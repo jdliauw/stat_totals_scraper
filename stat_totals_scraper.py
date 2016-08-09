@@ -175,23 +175,80 @@ def store_game_logs(player_gl_url, output):
             else:
                 output.write(str(attribute.string) + ',')
             glt_index = glt_index + 1
-        
+
+def year_parse():
+    
+    years = []
+    indices = []
+    hold = []
+    print '\nThis script pulls the game logs from basketball-reference.com for a given year or years and stores it as a csv in your current directory in the format: \"YEAR-YEAR_stats.csv\"\n'
+    print '   + If you want to pull a single year, just type the year followed by \'enter\'\n   + If you want to pull from multiple years, separate each year by a space, then \'enter\'.'
+    print '   + If you want to pull from an (inclusive) range of years, separate by the years by a \'-\' (ex: 1996-1997), then \'enter\'\n'
+
+    selection = raw_input("   Year(s) selection: ")
+
+    if ' ' not in selection and '-' not in selection:
+        years.append(selection)
+
+    elif ' ' in selection:
+        years = selection.split(' ')
+
+        flag = True
+        i = 0
+
+        while flag:
+
+            if '-' in years[i]:
+                hold = years[i].split('-')
+
+                for j in range(int(hold[1])  + 1 - int(hold[0])):
+                    hold.append(str(int(hold[0]) + j))
+
+                hold.remove(hold[0])
+                hold.remove(hold[0])                
+
+                for k in range(0, len(hold)):
+                    if(hold[k] not in years):
+                        years.append(hold[k])
+                years.remove(years[i])
+                i = i - 1
+
+            i = i + 1
+
+            if i == len(years):
+                flag = False
+
+    else:
+        years = selection.split('-')
+
+        for i in range(int(years[1]) + 1 - int(years[0])):
+            years.append(str(int(years[0]) + i))
+
+        years.remove(years[0])
+        years.remove(years[0])
+           
+    years.sort()
+
+    return years
+
 def run():
 
-    year = str(input('Enter the YEAR you want to collect game log stats from: ')).strip()
-    ofn = '{0}-{1}_stats.csv'.format(year,str(int(year)+1))
-    output = open(ofn, "w+")
-    output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
-    purls = grab_player_urls(year)
-    glurls = grab_game_log_urls(purls, year)
-   
-    for i in range(0,len(glurls)):
-        print glurls[i]
-        store_game_logs(glurls[i], output)
+	years = year_parse()
 
-    output.close()
+	for year in years:
+		ofn = '{0}-{1}_stats.csv'.format(str(int(year)-1), year)
+		output = open(ofn, "w+")
+		output.write('PID,FIRST,LAST,SEASON,GAME,YEAR,MONTH,DAY,AGE,TEAM,HOME/AWAY,OPP,RESULT,GS,MP,FGM,FGA,FG%,3PM,3PA,3P%,FTM,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,GMSC,+/-\n')
+		purls = grab_player_urls(year)
+		glurls = grab_game_log_urls(purls, year)
+		
+		for i in range(0,len(glurls)):
+			print i
+			store_game_logs(glurls[i], output)
 
-    print '\ntime elapsed:', time.time() - start, '\n'
+		output.close()
+
+	print '\ntime elapsed:', time.time() - start, '\n'
 
 if __name__ == '__main__':
     run()
